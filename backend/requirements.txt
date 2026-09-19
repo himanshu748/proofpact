@@ -1,0 +1,8 @@
+fastapi>=0.115,<1
+uvicorn[standard]>=0.34,<1
+pydantic>=2.10,<3
+boto3>=1.40,<2
+playwright>=1.55,<2
+httpx>=0.28,<1
+pytest>=8,<9
+modal==1.5.5

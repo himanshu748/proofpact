@@ -1,0 +1,16 @@
+node_modules/
+.next/
+.venv/
+.env*
+!.env.example
+backend/data/
+__pycache__/
+.pytest_cache/
+output/
+*.tsbuildinfo
+
+.DS_Store
+HANDOFF.md
+AGENTS.md
+CLAUDE.md
+.impeccable/

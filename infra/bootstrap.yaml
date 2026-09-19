@@ -1,0 +1,114 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ProofPact hackathon infrastructure; private records, private evidence, container build.
+Resources:
+  Records:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: proofpact-records
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions: [{AttributeName: pk, AttributeType: S}]
+      KeySchema: [{AttributeName: pk, KeyType: HASH}]
+      SSESpecification: {SSEEnabled: true}
+      PointInTimeRecoverySpecification: {PointInTimeRecoveryEnabled: true}
+      Tags: [{Key: Project, Value: ProofPact}]
+  Artifacts:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub proofpact-artifacts-${AWS::AccountId}-${AWS::Region}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration: [{ServerSideEncryptionByDefault: {SSEAlgorithm: AES256}}]
+      LifecycleConfiguration:
+        Rules: [{Id: EvidenceRetention, Status: Enabled, Prefix: evidence/, ExpirationInDays: 30}]
+      Tags: [{Key: Project, Value: ProofPact}]
+  Repository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: proofpact
+      ImageScanningConfiguration: {ScanOnPush: true}
+      LifecyclePolicy:
+        LifecyclePolicyText: '{"rules":[{"rulePriority":1,"description":"Retain last three images","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":3},"action":{"type":"expire"}}]}'
+  BuildLogs:
+    Type: AWS::Logs::LogGroup
+    Properties: {LogGroupName: /aws/codebuild/proofpact, RetentionInDays: 7}
+  FunctionLogs:
+    Type: AWS::Logs::LogGroup
+    Properties: {LogGroupName: /aws/lambda/proofpact, RetentionInDays: 7}
+  BuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement: [{Effect: Allow, Principal: {Service: codebuild.amazonaws.com}, Action: 'sts:AssumeRole'}]
+      Policies:
+        - PolicyName: BuildProjectOnly
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ['s3:GetObject','s3:GetObjectVersion']
+                Resource: !Sub '${Artifacts.Arn}/source/*'
+              - Effect: Allow
+                Action: ['logs:CreateLogStream','logs:PutLogEvents']
+                Resource: !GetAtt BuildLogs.Arn
+              - Effect: Allow
+                Action: ['ecr:GetAuthorizationToken']
+                Resource: '*'
+              - Effect: Allow
+                Action: ['ecr:BatchCheckLayerAvailability','ecr:InitiateLayerUpload','ecr:UploadLayerPart','ecr:CompleteLayerUpload','ecr:PutImage','ecr:BatchGetImage','ecr:GetDownloadUrlForLayer']
+                Resource: !GetAtt Repository.Arn
+  RuntimeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement: [{Effect: Allow, Principal: {Service: lambda.amazonaws.com}, Action: 'sts:AssumeRole'}]
+      Policies:
+        - PolicyName: ProofPactRuntime
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ['dynamodb:GetItem','dynamodb:PutItem']
+                Resource: !GetAtt Records.Arn
+              - Effect: Allow
+                Action: ['s3:GetObject','s3:PutObject']
+                Resource: !Sub '${Artifacts.Arn}/evidence/*'
+              - Effect: Allow
+                Action: ['logs:CreateLogStream','logs:PutLogEvents']
+                Resource: !GetAtt FunctionLogs.Arn
+              - Effect: Allow
+                Action: ['secretsmanager:GetSecretValue']
+                Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:proofpact/modal-*'
+              - Effect: Allow
+                Action: ['bedrock:InvokeModel']
+                Resource: !Sub 'arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.nova-micro-v1:0'
+  Build:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: proofpact
+      ServiceRole: !GetAtt BuildRole.Arn
+      TimeoutInMinutes: 25
+      QueuedTimeoutInMinutes: 10
+      Source:
+        Type: S3
+        Location: !Sub '${Artifacts}/source/proofpact.zip'
+        BuildSpec: infra/buildspec.yml
+      Artifacts: {Type: NO_ARTIFACTS}
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_MEDIUM
+        Image: aws/codebuild/standard:7.0
+        PrivilegedMode: true
+        EnvironmentVariables: [{Name: REPOSITORY_URI, Value: !GetAtt Repository.RepositoryUri}]
+      LogsConfig:
+        CloudWatchLogs: {Status: ENABLED, GroupName: !Ref BuildLogs}
+Outputs:
+  Bucket: {Value: !Ref Artifacts}
+  Table: {Value: !Ref Records}
+  Repository: {Value: !GetAtt Repository.RepositoryUri}
+  RuntimeRole: {Value: !GetAtt RuntimeRole.Arn}

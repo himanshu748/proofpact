@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ProofPact synthetic demo on Lambda with private DynamoDB and S3.
+Parameters:
+  ImageUri: {Type: String}
+  RuntimeRoleArn: {Type: String}
+  ModalSecretArn: {Type: String}
+  EvidenceBucket: {Type: String}
+  PublicOrigin: {Type: String, Default: 'https://disabled.invalid'}
+Resources:
+  Application:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: proofpact
+      PackageType: Image
+      Code: {ImageUri: !Ref ImageUri}
+      Role: !Ref RuntimeRoleArn
+      Architectures: [x86_64]
+      MemorySize: 2048
+      Timeout: 900
+      EphemeralStorage: {Size: 1024}
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: proofpact-records
+          EVIDENCE_BUCKET: !Ref EvidenceBucket
+          MODAL_SECRET_ARN: !Ref ModalSecretArn
+          AGENT_PROVIDER: modal
+          PUBLIC_ORIGIN: !Ref PublicOrigin
+          DEMO_MODE: 'true'
+          COOKIE_SECURE: 'true'
+      Tags: [{Key: Project, Value: ProofPact}]
+  PublicUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt Application.Arn
+      AuthType: NONE
+      InvokeMode: BUFFERED
+  UrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref Application
+      Action: lambda:InvokeFunctionUrl
+      Principal: '*'
+      FunctionUrlAuthType: NONE
+  InvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref Application
+      Action: lambda:InvokeFunction
+      Principal: '*'
+      InvokedViaFunctionUrl: true
+Outputs:
+  Url: {Value: !GetAtt PublicUrl.FunctionUrl}
