@@ -8,7 +8,7 @@ September 19 hosted validation: 26 backend tests, production frontend build, for
 
 Latest source update: pending amendments stay separate from the active agreement until both participants approve the exact proposed version. Existing delivery and evidence remain valid while a change is pending. This fix passes 27 backend tests and TypeScript checks locally; it is not yet included in the hosted demo.
 
-September 20 payment integration: 39 backend tests, TypeScript, production build and formatting pass. The local Payments screen was browser-checked with disconnected credentials. Provider API behavior is tested with mocked responses; a real Razorpay Route sandbox round trip is still pending credentials and linked-account setup. This source update has not been deployed to AWS.
+September 20 payment integration: 39 backend tests, TypeScript, production build and formatting pass. The local Payments screen was browser-checked with disconnected credentials. Provider API behavior is tested with mocked responses; a real Razorpay Route sandbox round trip is still pending linked-account setup. The update is deployed to AWS; hosted checks confirm payments remain disabled without complete provider configuration and pending amendments preserve the active agreement hash. Recovered test credentials authenticate with Razorpay, but Route readiness is not yet verified.
 
 ## Run locally
 

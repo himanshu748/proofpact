@@ -12,7 +12,7 @@ Enable Razorpay Route in your test account and create a test linked account. Con
 - `RAZORPAY_LINKED_ACCOUNT_ID`
 - `RAZORPAY_WEBHOOK_SECRET`
 
-The app does not automatically load `.env` files. Export variables before starting the API. The public AWS deployment currently has no payment credentials configured.
+The app does not automatically load `.env` files. Export variables before starting the API. The payment feature is deployed to AWS, but the public deployment currently has no payment credentials configured. Recovered test credentials successfully authenticated against Razorpay; a Route linked account and a full sandbox checkout/hold/release round trip remain unverified.
 
 Configure payment-captured/order-paid webhooks to `https://YOUR_ORIGIN/api/payments/webhook`. Set the same webhook secret on both sides. Raw-body HMAC validation precedes parsing; each notification prompts a fresh provider read. Repeated or out-of-order notifications cannot fabricate funding or trigger release. The Refresh payment status button also reconciles Route transfer and settlement state.
 
