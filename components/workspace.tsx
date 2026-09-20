@@ -60,6 +60,8 @@ import {
 } from "@/lib/types";
 import { Logo, Badge, Modal, Empty, PrivacyNote, External } from "./ui";
 
+import Payments from "./payments";
+
 type Tab =
   | "Overview"
   | "Private brief"
@@ -67,6 +69,7 @@ type Tab =
   | "Agreement"
   | "Delivery"
   | "Verification"
+  | "Payments"
   | "Activity";
 const tabs: Tab[] = [
   "Overview",
@@ -75,6 +78,7 @@ const tabs: Tab[] = [
   "Agreement",
   "Delivery",
   "Verification",
+  "Payments",
   "Activity",
 ];
 const labels: Record<string, string> = {
@@ -767,6 +771,14 @@ export default function Workspace() {
                     onDelivery={() => navigate("Delivery")}
                     onProof={() => setModal("proof")}
                     share={share}
+                  />
+                )}
+                {tab === "Payments" && (
+                  <Payments
+                    key={pact.id}
+                    pact={pact}
+                    role={role}
+                    update={update}
                   />
                 )}
                 {tab === "Activity" && <ActivityFeed pact={pact} />}

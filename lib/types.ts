@@ -49,6 +49,16 @@ export type Run = {
 };
 export type Approval = { role: Role; hash: string; at: string };
 export type Pact = {
+  payment?: {
+    mode: "test";
+    status: string;
+    agreement_hash: string;
+    amount_minor: number;
+    order_id?: string;
+    transfer_id?: string;
+    checked_at?: string;
+    dispute?: { by: string; reason: string; at: string };
+  };
   id: string;
   name: string;
   brief: string;

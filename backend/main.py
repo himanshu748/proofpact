@@ -178,6 +178,7 @@ def amend(pid:str,body:AmendmentBody,s=Depends(session)):
     except ValueError: raise HTTPException(422,'Enter a valid date.')
     p=project(pid,s);state(p,['AGREEMENT_LOCKED','SUBMITTED','NEEDS_FIX','NEEDS_HUMAN_REVIEW','VERIFIED'])
     if any(not x.strip() or len(x)>200 for x in body.included): raise HTTPException(422,'Invalid scope item.')
+    if p.get('payment'): raise HTTPException(409,'This milestone has a payment record. Resolve it before changing the funded agreement.')
     import copy
     a=copy.deepcopy(p['current']);a.update(version=a['version']+1,included=body.included,price_minor=body.price_minor,deadline=body.deadline)
     a['criteria']=[{'id':f'amend-{i}','title':r,'description':f'Client reviews delivery of: {r}','method':'Human review','required':True} for i,r in enumerate(body.included)]
@@ -189,6 +190,7 @@ def amend(pid:str,body:AmendmentBody,s=Depends(session)):
 @app.post('/api/projects/{pid}/amendment/approve')
 def approve_amendment(pid:str,body:ApproveBody,s=Depends(session)):
     p=project(pid,s);state(p,['AGREEMENT_LOCKED','SUBMITTED','NEEDS_FIX','NEEDS_HUMAN_REVIEW','VERIFIED'])
+    if p.get('payment'): raise HTTPException(409,'Resolve the milestone payment before activating an amendment.')
     pending=p.get('pending_amendment')
     if not pending or pending['base_hash']!=p['hash']: raise HTTPException(409,'No current amendment is available.')
     if not body.reviewed: raise HTTPException(422,'Confirm you reviewed this amendment.')
@@ -217,6 +219,7 @@ class DeliveryBody(BaseModel): url:str=Field(max_length=2000);notes:str=Field(de
 @app.post('/api/projects/{pid}/delivery')
 def deliver(pid:str,body:DeliveryBody,s=Depends(session)):
     role(s,'builder');p=project(pid,s);state(p,['AGREEMENT_LOCKED','SUBMITTED','NEEDS_FIX','NEEDS_HUMAN_REVIEW','VERIFIED'])
+    if p.get('payment') and p['payment']['status'] != 'FUNDED': raise HTTPException(409,'The milestone must be confirmed funded and undisputed before delivery.')
     try: safe_target(body.url)
     except (ValueError,OSError) as e: raise HTTPException(422,str(e))
     p['delivery']={**body.model_dump(),'at':now(),'hash':p['hash']};p['state']='SUBMITTED';p['share_token']=None
@@ -274,3 +277,6 @@ def receipt(token:str):
 def fixture(version:str):
     if not DEMO or version not in ('broken','fixed'): raise HTTPException(404)
     return fixture_html(version=='fixed')
+
+from .payments import install as install_payments
+install_payments(app, lambda: store, session, project, role, consume)

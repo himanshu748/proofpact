@@ -42,7 +42,10 @@ def seed_proposals(p):
     p['current']=p['proposals'][-1]['agreement'];p['hash']=digest(p['current']);p['state']='AWAITING_APPROVAL'
 
 def public_project(p):
-    return {k:v for k,v in p.items() if k not in ('_rev','share_token','owner','operation')}
+    result = {k:v for k,v in p.items() if k not in ('_rev','share_token','owner','operation')}
+    if result.get('payment'):
+        result['payment'] = {k:v for k,v in result['payment'].items() if k not in ('recipient','operation')}
+    return result
 
 def finish_state(p):
     results=p['runs'][-1]['results']

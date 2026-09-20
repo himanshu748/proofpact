@@ -8,6 +8,8 @@ September 19 hosted validation: 26 backend tests, production frontend build, for
 
 Latest source update: pending amendments stay separate from the active agreement until both participants approve the exact proposed version. Existing delivery and evidence remain valid while a change is pending. This fix passes 27 backend tests and TypeScript checks locally; it is not yet included in the hosted demo.
 
+September 20 payment integration: 39 backend tests, TypeScript, production build and formatting pass. The local Payments screen was browser-checked with disconnected credentials. Provider API behavior is tested with mocked responses; a real Razorpay Route sandbox round trip is still pending credentials and linked-account setup. This source update has not been deployed to AWS.
+
 ## Run locally
 
 Install Node dependencies with `npm ci`. Create a Python virtual environment, install `backend/requirements.txt`, and run `python -m playwright install chromium`.
@@ -50,7 +52,7 @@ Production build output, local records, credentials, and screenshots are exclude
 ## Current boundaries
 
 - This is a synthetic demo with explicit role switching, not production multiuser authentication.
-- Payments and milestone funding are deferred; the app does not collect, hold or release money.
+- Razorpay Route milestone funding is implemented for test keys only. Checkout, provider reconciliation, signed webhooks, dispute blocking and explicit release are covered by automated tests. No live money is supported. See [payment setup and boundaries](docs/payments.md).
 - Advocates are backend-orchestrated private contexts. The A2A protocol is not implemented.
 - Modal CPU inference is slow: the successful September 19 smoke negotiation took 106 seconds. It can decline or fail; sample mode is separately labeled.
 - Bedrock remains an implemented option, but live calls on September 19 were blocked by the account's daily token quota.
