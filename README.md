@@ -14,7 +14,7 @@ September 20 payment integration: 39 backend tests, TypeScript, production build
 
 The workspace **Agents** tab issues one-hour, pact- and role-scoped keys. A2A 1.0 clients can discover the Agent Card, request proposals, submit builder deliveries and run verification. Tasks persist with replay protection; agents cannot approve agreements, perform manual reviews or move money. Read the [connection guide](docs/a2a.md).
 
-Validation: 49 backend tests, TypeScript, production build and formatting pass. A local HTTP A2A round trip exercised sample negotiation and real broken/fixed Chromium delivery checks, preserving human review. The connection panel passed desktop/mobile inspection and its read-only A2A test. The same A2A workflow passed against the deployed AWS endpoint, including task persistence, retry behavior and revocation. The hosted Agents panel is available.
+Validation: 49 backend tests, TypeScript, production build and formatting pass. A local HTTP A2A round trip exercised sample negotiation and real broken/fixed Chromium delivery checks, preserving human review. The connection panel passed desktop/mobile inspection and its read-only A2A test. The same A2A workflow passed against the deployed AWS endpoint, including task persistence, retry behavior and revocation. The hosted Agents panel is available. A separate local A2A request invoking real remote Modal advocates completed in 200 seconds and returned a proposal awaiting human approval, with no approvals recorded.
 
 ## Run locally
 
