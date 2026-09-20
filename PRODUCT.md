@@ -11,7 +11,7 @@ Two private advocates, one shared immutable agreement, and criterion-level brows
 ## Operating Context
 The user supplied ProofPact_PRD_Design_Backend.md as the implementation brief. The current request is the best possible landing page, continuing that brief's explicit two-column, interactive proposal-to-proof composition. No new product concept is being chosen.
 ## Capabilities and Constraints
-Demo identities are synthetic and intentionally switchable. Agreement hashing, approvals, role checks, amendments, and browser verification run in the backend. Sample negotiation is labeled. Bedrock returned a daily-token quota error. Modal CPU inference and validated negotiation passed. The Lambda-hosted synthetic delivery flow passed with private S3 evidence. No A2A protocol claim.
+Demo identities are synthetic and intentionally switchable. Agreement hashing, approvals, role checks, amendments, and browser verification run in the backend. Sample negotiation is labeled. Bedrock returned a daily-token quota error. Modal CPU inference and validated negotiation passed. The Lambda-hosted synthetic delivery flow passed with private S3 evidence. A2A 1.0 JSON-RPC connects external clients to the negotiation and delivery services with pact-scoped keys and persistent tasks. Inference adapters remain Modal/Bedrock; human approvals and payment authority are excluded.
 ## Brand Commitments
 ProofPact. Agree on done. Prove it. The supplied design specifies warm editorial precision, paper surfaces, Geist interface text, Instrument Serif display, semantic violet/teal role colors. Build directly in code, no mockup approval gate.
 ## Evidence on Hand

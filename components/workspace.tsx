@@ -61,6 +61,7 @@ import {
 import { Logo, Badge, Modal, Empty, PrivacyNote, External } from "./ui";
 
 import Payments from "./payments";
+import AgentAccess from "./agent-access";
 
 type Tab =
   | "Overview"
@@ -69,6 +70,7 @@ type Tab =
   | "Agreement"
   | "Delivery"
   | "Verification"
+  | "Agents"
   | "Payments"
   | "Activity";
 const tabs: Tab[] = [
@@ -78,6 +80,7 @@ const tabs: Tab[] = [
   "Agreement",
   "Delivery",
   "Verification",
+  "Agents",
   "Payments",
   "Activity",
 ];
@@ -779,6 +782,13 @@ export default function Workspace() {
                     pact={pact}
                     role={role}
                     update={update}
+                  />
+                )}
+                {tab === "Agents" && (
+                  <AgentAccess
+                    key={`${pact.id}-${role}`}
+                    pact={pact}
+                    role={role}
                   />
                 )}
                 {tab === "Activity" && <ActivityFeed pact={pact} />}

@@ -49,6 +49,8 @@ def save_session(s): store.put('session#'+s['key'],s)
 def project(pid,s):
     p=store.get('project#'+pid)
     if not p or p['owner']!=s['workspace']: raise HTTPException(404,'Pact not found.')
+    if s.get('agent_expected_hash') and s['agent_expected_hash']!=(p.get('hash') or 'unversioned'):
+        raise HTTPException(409,'The agreement changed. Refresh it before requesting more work.')
     return p
 
 def save(p): return public_project(store.put('project#'+p['id'],p))
@@ -280,3 +282,25 @@ def fixture(version:str):
 
 from .payments import install as install_payments
 install_payments(app, lambda: store, session, project, role, consume)
+
+# The protocol adapter delegates only these operations. Approval, human review,
+# receipt publication and every payment endpoint are deliberately absent.
+from .a2a import install as install_a2a
+
+def execute_agent_command(command, grant):
+    p=project(grant['project_id'],grant)
+    if command.action!='get_pact' and command.expected_hash!=(p.get('hash') or 'unversioned'):
+        raise HTTPException(409,'The agreement changed. Refresh it before requesting more work.')
+    pid=p['id']
+    if command.action!='get_pact': grant={**grant,'agent_expected_hash':command.expected_hash}
+    if command.action=='get_pact': return p
+    if command.action=='negotiate':
+        return start_negotiation(pid,NegotiateBody(mode=command.mode),grant)
+    if command.action=='check_change':
+        return change(pid,ChangeBody(text=command.text),grant)
+    if command.action=='submit_delivery':
+        return deliver(pid,DeliveryBody(url=command.url,notes=command.notes),grant)
+    if command.action=='verify_delivery': return verify(pid,grant)
+    raise HTTPException(403,'Agent action is not allowed.')
+
+install_a2a(app,lambda:store,session,project,consume,execute_agent_command)

@@ -724,8 +724,9 @@ export default function Landing() {
               Modal runs private advocate inference; Amazon Bedrock remains an
               available adapter after an initial daily-quota failure. AWS
               DynamoDB and private S3 provide the deployment’s persistence.
-              Playwright performs browser checks. This is agent orchestration,
-              not an implementation of the A2A protocol.
+              Playwright performs browser checks. External agents connect
+              through A2A 1.0 with pact-scoped access. People approve agreements
+              and payment release.
             </p>
           </details>
         </section>

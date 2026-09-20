@@ -6,9 +6,15 @@ A hackathon demo for agreeing on software scope, approving an exact version, and
 
 September 19 hosted validation: 26 backend tests, production frontend build, format check, real hosted Modal proposal, and hosted broken/fixed CSV flow passed. Ten screenshot objects were confirmed in private S3 with all public-access blocks enabled.
 
-Latest source update: pending amendments stay separate from the active agreement until both participants approve the exact proposed version. Existing delivery and evidence remain valid while a change is pending. This fix passes 27 backend tests and TypeScript checks locally; it is not yet included in the hosted demo.
+Latest source update: pending amendments stay separate from the active agreement until both participants approve the exact proposed version. Existing delivery and evidence remain valid while a change is pending. This fix is deployed, and hosted checks confirm the active hash stays unchanged while an amendment is pending.
 
 September 20 payment integration: 39 backend tests, TypeScript, production build and formatting pass. The local Payments screen was browser-checked with disconnected credentials. Provider API behavior is tested with mocked responses; a real Razorpay Route sandbox round trip is still pending linked-account setup. The update is deployed to AWS; hosted checks confirm payments remain disabled without complete provider configuration and pending amendments preserve the active agreement hash. Recovered test credentials authenticate with Razorpay, but Route readiness is not yet verified.
+
+## A2A agent connections
+
+The workspace **Agents** tab issues one-hour, pact- and role-scoped keys. A2A 1.0 clients can discover the Agent Card, request proposals, submit builder deliveries and run verification. Tasks persist with replay protection; agents cannot approve agreements, perform manual reviews or move money. Read the [connection guide](docs/a2a.md).
+
+Validation: 49 backend tests, TypeScript, production build and formatting pass. A local HTTP A2A round trip exercised sample negotiation and real broken/fixed Chromium delivery checks, preserving human review. The connection panel passed desktop/mobile inspection and its read-only A2A test. The same A2A workflow passed against the deployed AWS endpoint, including task persistence, retry behavior and revocation. The hosted Agents panel is available.
 
 ## Run locally
 
@@ -53,7 +59,7 @@ Production build output, local records, credentials, and screenshots are exclude
 
 - This is a synthetic demo with explicit role switching, not production multiuser authentication.
 - Razorpay Route milestone funding is implemented for test keys only. Checkout, provider reconciliation, signed webhooks, dispute blocking and explicit release are covered by automated tests. No live money is supported. See [payment setup and boundaries](docs/payments.md).
-- Advocates are backend-orchestrated private contexts. The A2A protocol is not implemented.
+- Advocates are backend-orchestrated private contexts. External clients use the A2A 1.0 JSON-RPC binding; streaming and background task execution are not supported.
 - Modal CPU inference is slow: the successful September 19 smoke negotiation took 106 seconds. It can decline or fail; sample mode is separately labeled.
 - Bedrock remains an implemented option, but live calls on September 19 were blocked by the account's daily token quota.
 - Automated checks support the supplied test contract. Custom requirements require human review; arbitrary sites are not claimed as automatically verified.
