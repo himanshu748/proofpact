@@ -42,13 +42,20 @@ async def security(request,call_next):
 def session(request:Request):
     token=request.cookies.get('proofpact_session','')
     s=store.get('session#'+hashlib.sha256(token.encode()).hexdigest()) if token else None
-    if not s or s['expires']<time.time(): raise HTTPException(401,'Session expired. Open Demo Theater to start again.')
+    if not s or s['expires']<time.time(): raise HTTPException(401,'Session expired. Sign in again or open Demo Theater.')
+    if s.get('type')=='account':
+        user=store.get('user#'+s['user_id'])
+        if not user or user['epoch']!=s.get('auth_epoch'): raise HTTPException(401,'Sign in again.')
     return s
 
 def save_session(s): store.put('session#'+s['key'],s)
 def project(pid,s):
     p=store.get('project#'+pid)
-    if not p or p['owner']!=s['workspace']: raise HTTPException(404,'Pact not found.')
+    if not p: raise HTTPException(404,'Pact not found.')
+    if p.get('identity_mode')=='account':
+        user=store.get('user#'+s.get('user_id',''))
+        if s.get('type')!='account' or p.get('members',{}).get(s['role'])!=s.get('user_id') or not user or user['epoch']!=s.get('auth_epoch'): raise HTTPException(404,'Pact not found.')
+    elif s.get('type')=='account' or p['owner']!=s['workspace']: raise HTTPException(404,'Pact not found.')
     if s.get('agent_expected_hash') and s['agent_expected_hash']!=(p.get('hash') or 'unversioned'):
         raise HTTPException(409,'The agreement changed. Refresh it before requesting more work.')
     return p
@@ -79,6 +86,7 @@ def bootstrap(request:Request,response:Response):
         token=secrets.token_urlsafe(32);key=hashlib.sha256(token.encode()).hexdigest()
         s=store.put('session#'+key,{'key':key,'workspace':uid('ws'),'role':'client','expires':time.time()+86400,'projects':[]})
         response.set_cookie('proofpact_session',token,httponly=True,samesite='lax',secure=os.getenv('COOKIE_SECURE','false')=='true',max_age=86400)
+    if s.get('type')=='account': return current_session(s)
     if not s['projects']:
         p=create_project('Acme Admin Portal','Build an admin dashboard with login, analytics, CSV export, OTP, dark mode and payments by Sunday for ₹5,000.',fixture=True)
         p['owner']=s['workspace'];p['brief_ready']={'client':True,'builder':True};seed_proposals(p);save(p)
@@ -87,10 +95,17 @@ def bootstrap(request:Request,response:Response):
         s['projects'].append(p['id']);save_session(s)
     return {'role':s['role'],'projects':[public_project(project(pid,s)) for pid in s['projects']],'demo':True,'agent_provider':os.getenv('AGENT_PROVIDER','demo')}
 
+
+@app.get('/api/session')
+def current_session(s=Depends(session)):
+    user=store.get('user#'+s['user_id']) if s.get('type')=='account' else None
+    ids=user['projects'] if user else s['projects']
+    return {'role':s['role'],'name':s.get('name'),'projects':[public_project(project(pid,s)) for pid in ids], 'demo':not bool(user),'agent_provider':os.getenv('AGENT_PROVIDER','demo')}
+
 class RoleBody(BaseModel): role:Literal['client','builder']
 @app.post('/api/session/role')
 def switch(body:RoleBody,s=Depends(session)):
-    if not DEMO: raise HTTPException(403,'Role switching is only available in Demo Theater.')
+    if not DEMO or s.get('type')=='account': raise HTTPException(403,'Role switching is only available in Demo Theater.')
     s['role']=body.role;save_session(s);return {'role':s['role']}
 
 class ProjectBody(BaseModel):
@@ -99,12 +114,23 @@ class ProjectBody(BaseModel):
     client:str=Field(min_length=1,max_length=80)
     builder:str=Field(min_length=1,max_length=80)
     requirements:list[str]=Field(min_length=1,max_length=20)
+    acceptance_criteria:list[str]=Field(default_factory=list,max_length=20)
+    revision_days:int=Field(default=7,ge=1,le=30)
 @app.post('/api/projects')
 def create(body:ProjectBody,s=Depends(session)):
     consume(s,'projects',10)
     if any(not x.strip() or len(x)>200 for x in body.requirements): raise HTTPException(422,'Each requirement must be 1–200 characters.')
-    p=create_project(**body.model_dump());p['owner']=s['workspace'];save(p)
-    s['projects'].append(p['id']);save_session(s);return public_project(p)
+    if any(not x.strip() or len(x)>500 for x in body.acceptance_criteria): raise HTTPException(422,'Acceptance criteria must be 1–500 characters.')
+    if s.get('type')=='account' and not body.acceptance_criteria: raise HTTPException(422,'Define observable acceptance criteria before creating this pact.')
+    p=create_project(**body.model_dump());p['owner']=s['workspace']
+    if s.get('type')=='account':
+        p['identity_mode']='account';p['members']={'client':None,'builder':None};p['members'][s['role']]=s['user_id'];p[s['role']]=s['name']
+    save(p)
+    if s.get('type')=='account':
+        from .auth import add_project
+        add_project(store,s['user_id'],p['id'])
+    else: s['projects'].append(p['id']);save_session(s)
+    return public_project(p)
 @app.get('/api/projects/{pid}')
 def get_project(pid:str,s=Depends(session)): return public_project(project(pid,s))
 
@@ -133,6 +159,7 @@ class NegotiateBody(BaseModel): mode:Literal['demo','bedrock','modal']='demo'
 @app.post('/api/projects/{pid}/negotiate')
 def start_negotiation(pid:str,body:NegotiateBody,s=Depends(session)):
     p=project(pid,s);state(p,['READY_TO_NEGOTIATE','AWAITING_APPROVAL','NO_DEAL'])
+    if p.get('identity_mode')=='account' and not all(p['members'].values()): raise HTTPException(409,'Both participants must join before negotiation.')
     if not all(p['brief_ready'].values()): raise HTTPException(409,'Both private briefs are required.')
     if len(p['proposals'])>=10: raise HTTPException(429,'This demo pact has reached its proposal limit.')
     consume(s,'negotiation',10)
@@ -151,7 +178,7 @@ def approve(pid:str,body:ApproveBody,s=Depends(session)):
     p=project(pid,s);state(p,['AWAITING_APPROVAL'])
     if not body.reviewed: raise HTTPException(422,'Confirm you reviewed this version.')
     if body.content_hash!=p['hash'] or digest(p['current'])!=p['hash']: raise HTTPException(409,'The agreement changed. Review the latest version.')
-    p['approvals'][s['role']]={'role':s['role'],'hash':p['hash'],'at':now()}
+    p['approvals'][s['role']]={'role':s['role'],'hash':p['hash'],'at':now(),'identity':'verified_account' if s.get('type')=='account' else 'demo'}
     event(p,s['role'],f"{s['role'].title()} approved v{p['current']['version']}",'Human approval recorded for this exact agreement hash.')
     if set(p['approvals'])=={'client','builder'} and all(a['hash']==p['hash'] for a in p['approvals'].values()):
         p['state']='AGREEMENT_LOCKED';p['agreements'].append({'agreement':p['current'],'hash':p['hash'],'approvals':p['approvals'].copy(),'at':now()})
@@ -170,6 +197,8 @@ def change(pid:str,body:ChangeBody,s=Depends(session)):
     p['changes'].append(c);event(p,'mediator','Change request reviewed',c['rationale']);return save(p)
 
 class AmendmentBody(BaseModel):
+    acceptance_criteria:list[str]|None=Field(default=None,min_length=1,max_length=20)
+    revision_days:int|None=Field(default=None,ge=1,le=30)
     included:list[str]=Field(min_length=1,max_length=20)
     price_minor:int=Field(ge=100,le=1000000000)
     deadline:str=Field(pattern=r'^\d{4}-\d{2}-\d{2}$')
@@ -183,7 +212,11 @@ def amend(pid:str,body:AmendmentBody,s=Depends(session)):
     if p.get('payment'): raise HTTPException(409,'This milestone has a payment record. Resolve it before changing the funded agreement.')
     import copy
     a=copy.deepcopy(p['current']);a.update(version=a['version']+1,included=body.included,price_minor=body.price_minor,deadline=body.deadline)
-    a['criteria']=[{'id':f'amend-{i}','title':r,'description':f'Client reviews delivery of: {r}','method':'Human review','required':True} for i,r in enumerate(body.included)]
+    if body.acceptance_criteria and any(not x.strip() or len(x)>500 for x in body.acceptance_criteria): raise HTTPException(422,'Invalid acceptance criterion.')
+    if body.revision_days is not None:
+        a['revision_policy']={'days':body.revision_days,'starts':'first_delivery_submission','scope':'Corrections to agreed acceptance criteria; new features require an amendment.','expiry_effect':'No automatic acceptance or payment release.'}
+    a['delivery_approver']={'role':'client','name':p['client']}
+    a['criteria']=[{'id':f'amend-{i}','title':r,'description':f'Client reviews delivery of: {r}','method':'Human review','required':True} for i,r in enumerate(body.acceptance_criteria or body.included)]
     a['excluded']=[x for x in a['excluded'] if x not in body.included]
     if p.get('pending_amendment'): raise HTTPException(409,'Accept or reject the pending amendment first.')
     p['pending_amendment']={'agreement':a,'hash':digest(a),'base_hash':p['hash'],'approvals':{},'proposed_by':s['role'],'at':now()}
@@ -206,6 +239,7 @@ def approve_amendment(pid:str,body:ApproveBody,s=Depends(session)):
         p['agreements'].append({'agreement':a,'hash':p['hash'],'approvals':p['approvals'].copy(),'at':now()})
         p['proposals'].append({'agreement':a,'actor':pending['proposed_by'],'rationale':'Amendment accepted by both participants.','source':'human','at':now()})
         p['pending_amendment']=None
+        p.pop('first_delivery_at',None)
         event(p,'system','Amendment activated','Both people accepted the same version. New delivery evidence is required.')
     return save(p)
 
@@ -224,6 +258,7 @@ def deliver(pid:str,body:DeliveryBody,s=Depends(session)):
     if p.get('payment') and p['payment']['status'] != 'FUNDED': raise HTTPException(409,'The milestone must be confirmed funded and undisputed before delivery.')
     try: safe_target(body.url)
     except (ValueError,OSError) as e: raise HTTPException(422,str(e))
+    p.setdefault('first_delivery_at',now())
     p['delivery']={**body.model_dump(),'at':now(),'hash':p['hash']};p['state']='SUBMITTED';p['share_token']=None
     event(p,'builder','Delivery submitted','Ready to verify against the locked criteria.');return save(p)
 @app.post('/api/projects/{pid}/verify')
@@ -304,3 +339,27 @@ def execute_agent_command(command, grant):
     raise HTTPException(403,'Agent action is not allowed.')
 
 install_a2a(app,lambda:store,session,project,consume,execute_agent_command)
+
+from .auth import install as install_auth
+install_auth(app,lambda:store,session,project,consume)
+
+class RevisionBody(BaseModel):
+    criterion_ids:list[str]=Field(min_length=1,max_length=20)
+    notes:str=Field(min_length=5,max_length=2000)
+@app.post('/api/projects/{pid}/revisions')
+def revision(pid:str,body:RevisionBody,s=Depends(session)):
+    from datetime import datetime,timedelta,timezone
+    role(s,'client');p=project(pid,s)
+    state(p,['SUBMITTED','NEEDS_FIX','NEEDS_HUMAN_REVIEW','VERIFIED'])
+    first=p.get('first_delivery_at')
+    policy=p['current'].get('revision_policy')
+    if not first or not policy: raise HTTPException(409,'This agreement has no active revision window. Propose an amendment.')
+    end=datetime.fromisoformat(first)+timedelta(days=policy['days'])
+    if datetime.now(timezone.utc)>end: raise HTTPException(409,'The agreed revision window has ended. Propose a mutually accepted amendment.')
+    ids={c['id'] for c in p['current']['criteria']}
+    if not set(body.criterion_ids)<=ids: raise HTTPException(422,'Revisions must reference agreed acceptance criteria.')
+    consume(s,'revisions',20)
+    p.setdefault('revisions',[]).append({**body.model_dump(),'id':uid('revision'),'hash':p['hash'],'at':now(),'requested_by':'client'})
+    p['state']='NEEDS_FIX'
+    event(p,'client','Revision requested','Corrections requested within the agreed window. Scope and price remain unchanged.')
+    return save(p)

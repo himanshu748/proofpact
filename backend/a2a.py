@@ -51,7 +51,7 @@ def card():
     origin = os.getenv('PUBLIC_ORIGIN', 'http://127.0.0.1:3000').rstrip('/')
     return {
         'name': 'ProofPact', 'version': '0.2.0',
-        'description': 'Scope negotiation and delivery verification with human approval. Synthetic demo identities; no live payment authority.',
+        'description': 'Scope negotiation and delivery verification with human approval. Verified account or explicitly synthetic demo access; no live payment authority.',
         'supportedInterfaces': [{'url': origin + '/api/a2a', 'protocolBinding': 'JSONRPC', 'protocolVersion': '1.0'}],
         'capabilities': {'streaming': False, 'pushNotifications': False, 'extendedAgentCard': False},
         'securitySchemes': {'pactKey': {'httpAuthSecurityScheme': {'scheme': 'Bearer', 'description': 'One-hour pact and role scoped key, issued in the workspace Agents tab.'}}},
@@ -98,7 +98,7 @@ def install(app, get_store, session, project, consume, execute):
         grant = {**old, 'id': str(uuid.uuid4()), 'project_id': pid, 'workspace': s['workspace'],
                  'role': s['role'], 'expires': min(s['expires'], time.time() + 3600),
                  'scopes': sorted(ROLE_ACTIONS[s['role']] if body.allow_work else {'get_pact'}),
-                 'revoked': False}
+                 'revoked': False, **{k:s[k] for k in ('type','user_id','auth_epoch') if k in s}}
         # Rotation first invalidates the old key. Store only a digest lookup, never the token.
         get_store().put(key, grant)
         get_store().put('a2a-key#' + token_hash, {'access_key': key, 'id': grant['id']})

@@ -271,9 +271,9 @@ export default function AgentAccess({
           </a>
         </p>
         <p className="demo-disclosure">
-          Demo participants are synthetic. The A2A connection works, but this is
-          not production identity verification. Streaming and push notifications
-          are not supported.
+          Agent access stays bound to this pact and your account role. Demo
+          participants remain synthetic. Streaming and push notifications are
+          not supported.
         </p>
       </aside>
     </div>

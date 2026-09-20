@@ -51,8 +51,10 @@ export default function Landing() {
         <nav aria-label="Main navigation">
           <a href="#how-it-works">How it works</a>
           <a href="#the-proof">What counts as proof</a>
-          <Link href="/workspace" className="lp-nav-cta">
-            Open workspace <ArrowUpRight size={15} />
+          <Link href="/login/client">Client sign-in</Link>
+          <Link href="/login/freelancer">Freelancer sign-in</Link>
+          <Link href="/workspace?demo=1" className="lp-nav-cta">
+            Try the demo <ArrowUpRight size={15} />
           </Link>
         </nav>
       </header>
@@ -70,7 +72,7 @@ export default function Landing() {
               Checked against the work.
             </p>
             <div className="lp-hero-actions">
-              <Link href="/workspace" className="lp-button">
+              <Link href="/workspace?demo=1" className="lp-button">
                 Open live demo <ArrowUpRight size={18} />
               </Link>
               <a href="#how-it-works" className="lp-underlink">
@@ -546,7 +548,7 @@ export default function Landing() {
             <p>
               One version. Two approvals. <strong>No moving goalposts.</strong>
             </p>
-            <Link href="/workspace">
+            <Link href="/workspace?demo=1">
               See the agreement room <ArrowUpRight size={15} />
             </Link>
           </div>
@@ -566,7 +568,7 @@ export default function Landing() {
               just.” New requests deserve a clear conversation, not a silent
               change to the deal.
             </p>
-            <Link href="/workspace" className="lp-underlink">
+            <Link href="/workspace?demo=1" className="lp-underlink">
               Try a scope-change request <ArrowRight size={16} />
             </Link>
           </div>
@@ -689,7 +691,7 @@ export default function Landing() {
                 <Check size={15} /> Human review when a test can’t decide
               </li>
             </ul>
-            <Link href="/workspace" className="lp-underlink">
+            <Link href="/workspace?demo=1" className="lp-underlink">
               Inspect the evidence yourself <ArrowUpRight size={16} />
             </Link>
           </div>
@@ -720,10 +722,11 @@ export default function Landing() {
               A note on the implementation <Plus size={15} />
             </summary>
             <p>
-              The demo uses synthetic participants with a visible role switcher.
-              Modal runs private advocate inference; Amazon Bedrock remains an
-              available adapter after an initial daily-quota failure. AWS
-              DynamoDB and private S3 provide the deployment’s persistence.
+              Client and freelancer accounts use verified email sign-in. A
+              separate demo uses synthetic participants with a visible role
+              switcher. Modal runs private advocate inference; Amazon Bedrock
+              remains an available adapter after an initial daily-quota failure.
+              AWS DynamoDB and private S3 provide the deployment’s persistence.
               Playwright performs browser checks. External agents connect
               through A2A 1.0 with pact-scoped access. People approve agreements
               and payment release.
@@ -744,7 +747,7 @@ export default function Landing() {
             <br />
             Finish with something you can point to.
           </p>
-          <Link href="/workspace" className="lp-button">
+          <Link href="/workspace?demo=1" className="lp-button">
             Open live demo <ArrowUpRight size={18} />
           </Link>
           <small>No signup required. No real commitments.</small>
@@ -757,7 +760,7 @@ export default function Landing() {
         <span>Agree on done. Prove it.</span>
         <div>
           <a href="#how-it-works">How it works</a>
-          <Link href="/workspace">
+          <Link href="/workspace?demo=1">
             Enter the workspace <ArrowUpRight size={13} />
           </Link>
         </div>

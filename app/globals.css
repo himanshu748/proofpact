@@ -3736,3 +3736,36 @@ code {
   border: 1px solid #c8c4bf;
   border-radius: 8px;
 }
+.account-page {
+  min-height: 100vh;
+  padding: 40px 20px;
+  background: #f8f7f4;
+}
+.account-page > a,
+.account-page > .logo {
+  display: block;
+  width: fit-content;
+  margin: 0 auto 32px;
+}
+.account-form {
+  max-width: 560px;
+  margin: auto;
+}
+.account-form h1 {
+  font-size: clamp(28px, 5vw, 38px);
+  line-height: 1.15;
+  margin: 16px 0;
+}
+.account-form form {
+  margin-top: 24px;
+}
+.account-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 24px 0;
+}
+.account-links button {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

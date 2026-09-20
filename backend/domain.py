@@ -22,11 +22,11 @@ CRITERIA = [
 def agreement(p,price=750000,deadline='2026-09-21',version=3):
     requirements=p.get('requirements',['Secure login','Analytics dashboard','CSV export','OTP verification'])
     # Custom scope receives honest manual criteria until a supported test contract is configured.
-    criteria=CRITERIA if p.get('fixture') else [{'id':f'custom-{i}','title':r,'description':f'Client reviews delivery of: {r}', 'method':'Human review','required':True} for i,r in enumerate(requirements)]
-    return {'version':version,'project_id':p['id'],'name':p['name'],'client':p['client'],'builder':p['builder'],'currency':'INR','price_minor':price,'deadline':deadline,'included':requirements,'excluded':['Payment integration','Dark mode'] if p.get('fixture') else [],'criteria':criteria,'change_policy':'Changes require a new version and approval from both people. The current agreement stays locked.','risks':['Third-party service access must be supplied before delivery.']}
+    criteria=CRITERIA if p.get('fixture') else [{'id':f'custom-{i}','title':r,'description':f'Client reviews delivery of: {r}', 'method':'Human review','required':True} for i,r in enumerate(p.get('acceptance_criteria') or requirements)]
+    return {'version':version,'project_id':p['id'],'name':p['name'],'client':p['client'],'builder':p['builder'],'currency':'INR','price_minor':price,'deadline':deadline,'included':requirements,'excluded':['Payment integration','Dark mode'] if p.get('fixture') else [],'criteria':criteria,'delivery_approver':{'role':'client','name':p['client']},'revision_policy':{'days':p.get('revision_days',7),'starts':'first_delivery_submission','scope':'Corrections to agreed acceptance criteria; new features require an amendment.','expiry_effect':'No automatic acceptance or payment release.'},'change_policy':'Changes require a new version and approval from both people. The current agreement stays locked.','risks':['Third-party service access must be supplied before delivery.']}
 
-def create_project(name,brief,client='Alex Morgan',builder='Jamie Chen',fixture=False,requirements=None):
-    p={'id':uid('p'),'name':name,'brief':brief,'client':client,'builder':builder,'fixture':fixture,'requirements':requirements or ['Secure login','Analytics dashboard','CSV export','OTP verification'],'state':'BRIEFING','created_at':now(),'events':[],'proposals':[],'agreements':[],'approvals':{},'changes':[],'runs':[],'delivery':None,'brief_ready':{'client':False,'builder':False},'share_token':None}
+def create_project(name,brief,client='Alex Morgan',builder='Jamie Chen',fixture=False,requirements=None,acceptance_criteria=None,revision_days=7):
+    p={'id':uid('p'),'name':name,'brief':brief,'client':client,'builder':builder,'fixture':fixture,'requirements':requirements or ['Secure login','Analytics dashboard','CSV export','OTP verification'],'acceptance_criteria':acceptance_criteria or [],'revision_days':revision_days,'state':'BRIEFING','created_at':now(),'events':[],'proposals':[],'agreements':[],'approvals':{},'changes':[],'runs':[],'delivery':None,'brief_ready':{'client':False,'builder':False},'share_token':None}
     event(p,'system','Pact created','A shared starting point. Private limits stay with each advocate.')
     return p
 
@@ -42,7 +42,8 @@ def seed_proposals(p):
     p['current']=p['proposals'][-1]['agreement'];p['hash']=digest(p['current']);p['state']='AWAITING_APPROVAL'
 
 def public_project(p):
-    result = {k:v for k,v in p.items() if k not in ('_rev','share_token','owner','operation')}
+    result = {k:v for k,v in p.items() if k not in ('_rev','share_token','owner','operation','members')}
+    if p.get('members'): result['participants_joined']={k:bool(v) for k,v in p['members'].items()}
     if result.get('payment'):
         result['payment'] = {k:v for k,v in result['payment'].items() if k not in ('recipient','operation')}
     return result

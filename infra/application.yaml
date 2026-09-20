@@ -1,6 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: ProofPact synthetic demo on Lambda with private DynamoDB and S3.
 Parameters:
+  CognitoClientId: {Type: String, Default: ''}
   ImageUri: {Type: String}
   RuntimeRoleArn: {Type: String}
   ModalSecretArn: {Type: String}
@@ -20,6 +21,7 @@ Resources:
       EphemeralStorage: {Size: 1024}
       Environment:
         Variables:
+          COGNITO_CLIENT_ID: !Ref CognitoClientId
           DYNAMODB_TABLE: proofpact-records
           EVIDENCE_BUCKET: !Ref EvidenceBucket
           MODAL_SECRET_ARN: !Ref ModalSecretArn

@@ -18,6 +18,13 @@ export type Agreement = {
   included: string[];
   excluded: string[];
   criteria: Criterion[];
+  delivery_approver?: { role: "client"; name: string };
+  revision_policy?: {
+    days: number;
+    starts: string;
+    scope: string;
+    expiry_effect: string;
+  };
   change_policy: string;
   risks: string[];
 };
@@ -49,6 +56,18 @@ export type Run = {
 };
 export type Approval = { role: Role; hash: string; at: string };
 export type Pact = {
+  identity_mode?: "account";
+  participants_joined?: Record<Role, boolean>;
+  acceptance_criteria?: string[];
+  revision_days?: number;
+  first_delivery_at?: string;
+  revisions?: {
+    id: string;
+    notes: string;
+    criterion_ids: string[];
+    hash: string;
+    at: string;
+  }[];
   payment?: {
     mode: "test";
     status: string;

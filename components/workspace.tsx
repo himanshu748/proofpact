@@ -62,6 +62,7 @@ import { Logo, Badge, Modal, Empty, PrivacyNote, External } from "./ui";
 
 import Payments from "./payments";
 import AgentAccess from "./agent-access";
+import PactTerms from "./pact-terms";
 
 type Tab =
   | "Overview"
@@ -70,6 +71,7 @@ type Tab =
   | "Agreement"
   | "Delivery"
   | "Verification"
+  | "Terms"
   | "Agents"
   | "Payments"
   | "Activity";
@@ -80,6 +82,7 @@ const tabs: Tab[] = [
   "Agreement",
   "Delivery",
   "Verification",
+  "Terms",
   "Agents",
   "Payments",
   "Activity",
@@ -106,6 +109,8 @@ const roleNames: Record<string, string> = {
 };
 
 export default function Workspace() {
+  const [demo, setDemo] = useState(true);
+  const [accountName, setAccountName] = useState("");
   const [projects, setProjects] = useState<Pact[]>([]),
     [id, setId] = useState(""),
     [role, setRole] = useState<Role>("client"),
@@ -132,8 +137,17 @@ export default function Workspace() {
         projects: Pact[];
         role: Role;
         agent_provider: string;
-      }>("/session", "POST");
+        demo: boolean;
+        name?: string;
+      }>(
+        "/session",
+        new URLSearchParams(window.location.search).get("demo") === "1"
+          ? "POST"
+          : "GET",
+      );
       setProjects(r.projects);
+      setDemo(r.demo);
+      setAccountName(r.name || "");
       setId((old) =>
         r.projects.some((p) => p.id === old) ? old : r.projects[0]?.id,
       );
@@ -242,14 +256,42 @@ export default function Workspace() {
     );
   if (!pact)
     return (
-      <div className="boot">
+      <main className="account-page">
         <Logo />
-        <h2>Let’s get your workspace ready.</h2>
-        <p role="alert">{error || "No project is open."}</p>
-        <button className="primary" onClick={load}>
-          Try again <RotateCcw size={16} />
-        </button>
-      </div>
+        <section className="form-paper account-form">
+          <h1>
+            {accountName
+              ? `Welcome, ${accountName}.`
+              : "Your agreement workspace."}
+          </h1>
+          <p>
+            {error ||
+              "Create a pact, define the deliverables and invite the other participant. Each person gives their requirements to their own advocate."}
+          </p>
+          {!error && (
+            <button className="btn primary" onClick={() => setModal("create")}>
+              Create your first pact
+            </button>
+          )}
+          <p>
+            <a href="/login/client">Client sign-in</a> ·{" "}
+            <a href="/login/freelancer">Freelancer sign-in</a>
+          </p>
+          <button className="btn" onClick={load}>
+            Refresh workspace
+          </button>
+        </section>
+        {modal === "create" && (
+          <CreateDialog
+            close={() => setModal("")}
+            created={(p) => {
+              update(p);
+              setModal("");
+              setTab("Terms");
+            }}
+          />
+        )}
+      </main>
     );
   return (
     <div className="workspace">
@@ -316,15 +358,34 @@ export default function Workspace() {
           <Plus size={16} /> New pact
         </button>
         <div className="sidebar-bottom">
-          <div className="demo-card">
-            <div>
-              <span className="live-dot" /> Demo Theater <Badge>ON</Badge>
+          {demo ? (
+            <div className="demo-card">
+              <div>
+                <span className="live-dot" /> Demo Theater <Badge>ON</Badge>
+              </div>
+              <p>Two sides. One shared definition of done.</p>
+              <button onClick={() => setModal("demo")}>
+                Explore the walkthrough <ArrowUpRight size={14} />
+              </button>
             </div>
-            <p>Two sides. One shared definition of done.</p>
-            <button onClick={() => setModal("demo")}>
-              Explore the walkthrough <ArrowUpRight size={14} />
-            </button>
-          </div>
+          ) : (
+            <div className="demo-card">
+              <strong>Verified account</strong>
+              <p>
+                {accountName} · {role === "client" ? "Client" : "Freelancer"}
+              </p>
+              <button
+                onClick={async () => {
+                  await api("/auth/logout", "POST");
+                  window.location.assign(
+                    role === "client" ? "/login/client" : "/login/freelancer",
+                  );
+                }}
+              >
+                Sign out
+              </button>
+            </div>
+          )}
           <button
             className="nav-item help"
             onClick={() => setModal("architecture")}
@@ -336,20 +397,23 @@ export default function Workspace() {
               {role === "client" ? "AM" : "JC"}
             </div>
             <span>
-              {pact[role]}
+              {demo ? pact[role] : accountName}
               <small>
-                {role === "client" ? "Client" : "Builder"} · demo participant
+                {role === "client" ? "Client" : "Freelancer"} ·{" "}
+                {demo ? "demo participant" : "verified account"}
               </small>
             </span>
-            <button
-              className="icon-button"
-              aria-label="Switch demo role"
-              onClick={() =>
-                switchRole(role === "client" ? "builder" : "client")
-              }
-            >
-              <ChevronDown size={16} />
-            </button>
+            {demo && (
+              <button
+                className="icon-button"
+                aria-label="Switch demo role"
+                onClick={() =>
+                  switchRole(role === "client" ? "builder" : "client")
+                }
+              >
+                <ChevronDown size={16} />
+              </button>
+            )}
           </div>
         </div>
       </aside>
@@ -778,6 +842,14 @@ export default function Workspace() {
                 )}
                 {tab === "Payments" && (
                   <Payments
+                    key={pact.id}
+                    pact={pact}
+                    role={role}
+                    update={update}
+                  />
+                )}
+                {tab === "Terms" && (
+                  <PactTerms
                     key={pact.id}
                     pact={pact}
                     role={role}
@@ -1708,6 +1780,23 @@ function Delivery({
                 <li key={item}>{item}</li>
               ))}
             </ul>
+            <h4>Acceptance criteria</h4>
+            <ul>
+              {p.pending_amendment.agreement.criteria.map((c) => (
+                <li key={c.id}>{c.description}</li>
+              ))}
+            </ul>
+            <p>
+              Delivery approver:{" "}
+              {p.pending_amendment.agreement.delivery_approver?.name ||
+                p.client}{" "}
+              (client).
+            </p>
+            <p>
+              {p.pending_amendment.agreement.revision_policy
+                ? `${p.pending_amendment.agreement.revision_policy.days} days for corrections after first delivery. No automatic acceptance or payment release.`
+                : "No revision window defined."}
+            </p>
             <p>
               {Object.keys(p.pending_amendment.approvals).length} of 2 approvals
             </p>
@@ -1724,7 +1813,7 @@ function Delivery({
             >
               {p.pending_amendment.approvals[role]
                 ? "Your approval recorded"
-                : "Accept this scope, price and date"}
+                : "Accept these agreement terms"}
             </button>{" "}
             <button
               className="secondary"
@@ -1785,7 +1874,7 @@ function Delivery({
           </button>
           {role !== "client" && (
             <small className="demo-disclosure">
-              Switch to the client to request a change.
+              The client can request a change.
             </small>
           )}
         </div>
@@ -1965,7 +2054,7 @@ function Verification({
                 <p>
                   {role === "client"
                     ? "Open the mobile evidence and confirm whether the layout is usable."
-                    : "Switch to the client to review the mobile screenshot."}
+                    : "The client needs to review the mobile screenshot."}
                 </p>
               </div>
             </div>
@@ -2070,6 +2159,15 @@ function ApproveDialog({
           You are approving as the <strong>{role}</strong>. Agents cannot do
           this for you. Any edit requires both people to approve a new version.
         </p>
+        <p>
+          Delivery approver:{" "}
+          {pact.current!.delivery_approver?.name || pact.client} (client).
+        </p>
+        <p>
+          {pact.current!.revision_policy
+            ? `${pact.current!.revision_policy.days} days to request corrections after first delivery. Expiry does not accept work or release payment.`
+            : "No revision window is defined in this version."}
+        </p>
         <div className="hash-display">
           <small>SHA-256 · THIS EXACT VERSION</small>
           <code>{pact.hash}</code>
@@ -2081,7 +2179,8 @@ function ApproveDialog({
             onChange={(e) => setChecked(e.target.checked)}
           />
           <span>
-            I reviewed the scope, price, deadline and acceptance criteria.
+            I reviewed the deliverables, price, deadline, acceptance criteria,
+            revision window and delivery approver.
           </span>
         </label>
       </div>
@@ -2118,6 +2217,11 @@ function CreateDialog({
     try {
       created(
         await api<Pact>("/projects", "POST", {
+          acceptance_criteria: String(f.get("acceptance_criteria"))
+            .split("\n")
+            .map((x) => x.trim())
+            .filter(Boolean),
+          revision_days: Number(f.get("revision_days")),
           name: f.get("name"),
           brief: f.get("brief"),
           client: f.get("client"),
@@ -2182,7 +2286,9 @@ function CreateDialog({
           </div>
           <label className="field">
             Required deliverables
-            <small>One per line. These become acceptance criteria.</small>
+            <small>
+              One deliverable per line. Define how each is checked below.
+            </small>
             <textarea
               name="requirements"
               required
@@ -2190,6 +2296,37 @@ function CreateDialog({
               placeholder={"Secure login\nAnalytics dashboard\nCSV export"}
             />
           </label>
+          <label className="field">
+            Observable acceptance criteria
+            <small>
+              One check per line. Specify a result both people can inspect.
+            </small>
+            <textarea
+              name="acceptance_criteria"
+              required
+              rows={4}
+              maxLength={10000}
+              placeholder={
+                "Export contains all records, including other pages.\nAt 390px the page has no horizontal overflow."
+              }
+            />
+          </label>
+          <label className="field">
+            Revision window (days after first delivery)
+            <input
+              name="revision_days"
+              type="number"
+              min={1}
+              max={30}
+              defaultValue={7}
+              required
+            />
+          </label>
+          <p className="demo-disclosure">
+            Both people approve the agreement. The client approves delivery. A
+            revision window ending never automatically accepts work or releases
+            payment.
+          </p>
           <div className="notice-box">
             <Info size={16} />
             <span>
@@ -2294,6 +2431,11 @@ function AmendDialog({
               .filter(Boolean),
             price_minor: Math.round(Number(f.get("price")) * 100),
             deadline: f.get("deadline"),
+            acceptance_criteria: String(f.get("criteria"))
+              .split("\n")
+              .map((x) => x.trim())
+              .filter(Boolean),
+            revision_days: Number(f.get("revision_days")),
           });
         }}
       >
@@ -2309,6 +2451,26 @@ function AmendDialog({
               required
               rows={5}
               defaultValue={a.included.join("\n")}
+            />
+          </label>
+          <label className="field">
+            Observable acceptance criteria · one per line
+            <textarea
+              name="criteria"
+              required
+              rows={4}
+              defaultValue={a.criteria.map((c) => c.description).join("\n")}
+            />
+          </label>
+          <label className="field">
+            Revision window · days after first delivery
+            <input
+              name="revision_days"
+              type="number"
+              required
+              min={1}
+              max={30}
+              defaultValue={a.revision_policy?.days || 7}
             />
           </label>
           <div className="form-row">

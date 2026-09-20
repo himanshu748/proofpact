@@ -57,7 +57,7 @@ Production build output, local records, credentials, and screenshots are exclude
 
 ## Current boundaries
 
-- This is a synthetic demo with explicit role switching, not production multiuser authentication.
+- Separate client and freelancer accounts use Cognito email verification and fixed roles. Invitations connect two participants; private briefs are isolated. The synthetic demo remains separate. See [account setup and limits](docs/accounts.md).
 - Razorpay Route milestone funding is implemented for test keys only. Checkout, provider reconciliation, signed webhooks, dispute blocking and explicit release are covered by automated tests. No live money is supported. See [payment setup and boundaries](docs/payments.md).
 - Advocates are backend-orchestrated private contexts. External clients use the A2A 1.0 JSON-RPC binding; streaming and background task execution are not supported.
 - Modal CPU inference is slow: the successful September 19 smoke negotiation took 106 seconds. It can decline or fail; sample mode is separately labeled.
