@@ -2454,3 +2454,436 @@
   transform: none;
   animation: none;
 }
+
+/* The agreement's lifecycle is the visual spine of the submission story. */
+.lp-journey {
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 34px 0 42px;
+  border-block: 1px solid var(--lp-line);
+}
+.lp-journey-intro {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 30px;
+  font-size: 14px;
+  font-weight: 550;
+}
+.lp-journey-intro a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 450;
+}
+.lp-journey ol {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+}
+.lp-journey li {
+  display: flex;
+  gap: 13px;
+  position: relative;
+  padding-right: 14px;
+}
+.lp-journey-number {
+  border: 1px solid #b9c2a8;
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #4b5b38;
+}
+.lp-journey h3 {
+  font-size: 15px;
+  font-weight: 550;
+  margin: 2px 0 8px;
+  letter-spacing: -0.02em;
+}
+.lp-journey p {
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 0;
+  max-width: 23ch;
+}
+.lp-journey-arrow {
+  position: absolute;
+  right: -18px;
+  top: 5px;
+  color: #7c856f;
+}
+.lp-observable {
+  max-width: 1220px;
+  margin: auto;
+  padding: 95px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 90px;
+  align-items: center;
+}
+.lp-observable h2,
+.lp-architecture h2,
+.lp-judge h2 {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(40px, 4.1vw, 57px);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin: 0 0 25px;
+  text-wrap: balance;
+}
+.lp-observable h2 em,
+.lp-architecture h2 em {
+  color: var(--lp-olive);
+  font-weight: 400;
+}
+.lp-observable-copy > p {
+  font-size: 15px;
+  line-height: 1.8;
+  max-width: 45ch;
+  margin: 0 0 18px;
+}
+.lp-observable-copy > .lp-underlink {
+  margin-top: 10px;
+}
+.lp-contract {
+  background: var(--lp-white);
+  border: 1px solid var(--lp-line);
+  border-radius: 9px;
+  padding: 28px;
+}
+.lp-contract-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 19px;
+  font-weight: 550;
+}
+.lp-contract-header small {
+  font-size: 10px;
+  font-weight: 450;
+  color: var(--lp-muted);
+  margin-left: auto;
+}
+.lp-contract dl {
+  margin: 25px 0 0;
+}
+.lp-contract dl > div {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 20px;
+  padding: 20px 0;
+  border-top: 1px solid var(--lp-line);
+}
+.lp-contract dt {
+  font-size: 11px;
+  color: var(--lp-muted);
+  padding-top: 2px;
+}
+.lp-contract dd {
+  font-size: 14px;
+  line-height: 1.65;
+  margin: 0;
+}
+.lp-contract-seal {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid var(--lp-line);
+  padding-top: 20px;
+  font-size: 11px;
+  color: #4c5b3d;
+}
+.lp-contract-seal svg {
+  flex-shrink: 0;
+}
+.lp-architecture {
+  max-width: 1220px;
+  margin: auto;
+  padding: 80px 0;
+}
+.lp-architecture-map {
+  max-width: 860px;
+  margin: 50px auto 0;
+  text-align: center;
+}
+.lp-arch-people {
+  display: flex;
+  justify-content: center;
+  gap: 70px;
+  position: relative;
+  padding-bottom: 35px;
+}
+.lp-arch-people > span {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 16px;
+}
+.lp-arch-people small {
+  position: absolute;
+  bottom: 0;
+  font-size: 11px;
+  color: var(--lp-muted);
+}
+.lp-arch-people i {
+  font-style: normal;
+}
+.lp-arch-wire {
+  display: block;
+  width: 140px;
+  height: 60px;
+  margin: auto;
+  fill: var(--lp-paper);
+  stroke: #909d7d;
+  stroke-width: 1;
+}
+.lp-arch-core {
+  background: var(--lp-ink);
+  color: var(--lp-white);
+  padding: 28px 20px;
+  border-radius: 8px;
+  display: grid;
+  gap: 14px;
+}
+.lp-arch-core > span {
+  font-size: 12px;
+  color: #dce3cf;
+}
+.lp-arch-core strong {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: 34px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+.lp-arch-core small {
+  font-size: 11px;
+  color: #dce3cf;
+}
+.lp-arch-services {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding-top: 30px;
+}
+.lp-arch-services > div {
+  display: grid;
+  gap: 7px;
+  position: relative;
+  padding: 20px 8px 0;
+}
+.lp-arch-services > div:before {
+  content: "";
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  height: 35px;
+  border-left: 1px solid #acb797;
+}
+.lp-arch-services strong {
+  font-size: 15px;
+  font-weight: 550;
+}
+.lp-arch-services span {
+  font-size: 12px;
+  color: var(--lp-muted);
+}
+.lp-arch-inference {
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 32px auto 0;
+  max-width: 70ch;
+}
+.lp-build-limits {
+  max-width: 860px;
+  margin: 28px auto 0;
+  border-block: 1px solid var(--lp-line);
+  padding: 18px 0;
+}
+.lp-build-limits summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 550;
+}
+.lp-build-limits p {
+  font-size: 13px;
+  line-height: 1.8;
+  margin: 16px 0 0;
+}
+.lp-judge {
+  max-width: 1220px;
+  margin: 20px auto 0;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 70px;
+  padding: 50px;
+  background: #e8ecde;
+  border-radius: 10px;
+  align-items: center;
+}
+.lp-judge h2 {
+  margin-bottom: 15px;
+}
+.lp-judge p {
+  max-width: 50ch;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #59634e;
+}
+.lp-judge-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  font-size: 11px;
+  margin-top: 25px;
+  color: #45523b;
+}
+.lp-judge-facts span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lp-judge-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 22px;
+}
+@media (max-width: 1270px) {
+  .lp-journey,
+  .lp-observable,
+  .lp-architecture,
+  .lp-judge {
+    margin-left: 40px;
+    margin-right: 40px;
+  }
+  .lp-observable {
+    gap: 50px;
+  }
+  .lp-nav nav {
+    gap: 22px;
+  }
+}
+@media (max-width: 959px) {
+  .lp-journey ol {
+    grid-template-columns: 1fr 1fr;
+    gap: 26px;
+  }
+  .lp-journey-arrow {
+    display: none;
+  }
+  .lp-journey p {
+    max-width: 30ch;
+  }
+  .lp-observable {
+    gap: 30px;
+  }
+  .lp-contract {
+    padding: 20px;
+  }
+  .lp-contract dl > div {
+    grid-template-columns: 85px 1fr;
+    gap: 12px;
+  }
+  .lp-contract-header {
+    flex-wrap: wrap;
+  }
+  .lp-contract-header small {
+    margin-left: 0;
+  }
+  .lp-judge {
+    padding: 32px;
+    gap: 30px;
+  }
+  .lp-arch-core strong {
+    font-size: 29px;
+  }
+}
+@media (max-width: 699px) {
+  .lp-journey,
+  .lp-observable,
+  .lp-architecture,
+  .lp-judge {
+    margin-left: 24px;
+    margin-right: 24px;
+  }
+  .lp-journey-intro {
+    font-size: 13px;
+  }
+  .lp-journey-intro a {
+    display: none;
+  }
+  .lp-journey ol {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .lp-journey p {
+    max-width: 38ch;
+  }
+  .lp-journey h3 {
+    font-size: 16px;
+  }
+  .lp-journey-number {
+    width: 28px;
+    height: 28px;
+  }
+  .lp-observable {
+    grid-template-columns: 1fr;
+    padding: 65px 0;
+    gap: 30px;
+  }
+  .lp-observable h2,
+  .lp-architecture h2 {
+    font-size: 43px;
+  }
+  .lp-contract dl > div {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+  .lp-contract dt {
+    font-size: 12px;
+  }
+  .lp-architecture {
+    padding: 55px 0;
+  }
+  .lp-arch-core strong {
+    font-size: 27px;
+    line-height: 1.3;
+  }
+  .lp-arch-services {
+    grid-template-columns: 1fr;
+    padding-top: 0;
+    gap: 0;
+  }
+  .lp-arch-services > div {
+    padding-top: 27px;
+  }
+  .lp-arch-services > div:before {
+    display: none;
+  }
+  .lp-arch-people {
+    gap: 35px;
+  }
+  .lp-judge {
+    grid-template-columns: 1fr;
+    padding: 26px;
+    gap: 26px;
+  }
+  .lp-judge h2 {
+    font-size: 43px;
+  }
+  .lp-judge-facts {
+    gap: 12px;
+  }
+  .lp-judge-actions .lp-button {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

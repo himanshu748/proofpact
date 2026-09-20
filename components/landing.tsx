@@ -20,12 +20,15 @@ import {
   Code2,
   UserRound,
   Scale,
-  Server,
-  Database,
-  Cloud,
   CheckCircle2,
 } from "lucide-react";
 import { Logo } from "./ui";
+import {
+  PactJourney,
+  ObservableAgreement,
+  AwsArchitecture,
+  JudgeStart,
+} from "./landing-story";
 import "@/app/landing.css";
 
 const stages = [
@@ -50,7 +53,7 @@ export default function Landing() {
         </Link>
         <nav aria-label="Main navigation">
           <a href="#how-it-works">How it works</a>
-          <a href="#the-proof">What counts as proof</a>
+          <a href="#built-on-aws">Built on AWS</a>
           <Link href="/login/client">Client sign-in</Link>
           <Link href="/login/freelancer">Freelancer sign-in</Link>
           <Link href="/workspace?demo=1" className="lp-nav-cta">
@@ -67,9 +70,9 @@ export default function Landing() {
               <em>Prove it.</em>
             </h1>
             <p>
-              A clear agreement between the person with the idea and the person
-              building it. Negotiated by private advocates. Approved by you.
-              Checked against the work.
+              For clients and freelancers who need a shared definition of done.
+              Give your requirements to private AI advocates, approve the same
+              scope, and check the delivery against what you agreed.
             </p>
             <div className="lp-hero-actions">
               <Link href="/workspace?demo=1" className="lp-button">
@@ -400,17 +403,7 @@ export default function Landing() {
             </div>
           </div>
         </section>
-        <div className="lp-principles">
-          <span>
-            <Lock size={16} /> Your limits stay on your side.
-          </span>
-          <span>
-            <UserRound size={16} /> People give the final yes.
-          </span>
-          <span>
-            <ShieldCheck size={16} /> Every result needs evidence.
-          </span>
-        </div>
+        <PactJourney />
         <section className="lp-how" id="how-it-works">
           <div className="lp-section-heading">
             <h2>
@@ -553,6 +546,7 @@ export default function Landing() {
             </Link>
           </div>
         </section>
+        <ObservableAgreement />
         <section className="lp-scope-story">
           <div className="lp-scope-copy">
             <span className="lp-quote-mark" aria-hidden="true">
@@ -696,43 +690,8 @@ export default function Landing() {
             </Link>
           </div>
         </section>
-        <section className="lp-build-note">
-          <div>
-            <h3>Built to make its work inspectable.</h3>
-            <p>
-              Explicit permissions. Bounded negotiation. An agreement hash that
-              both people approve.
-            </p>
-          </div>
-          <div className="lp-build-services">
-            <span>
-              <Cloud size={18} /> AWS
-            </span>
-            <span className="lp-service-rule" />
-            <span>
-              <Server size={18} /> Modal
-            </span>
-            <span className="lp-service-rule" />
-            <span>
-              <Eye size={18} /> Playwright
-            </span>
-          </div>
-          <details>
-            <summary>
-              A note on the implementation <Plus size={15} />
-            </summary>
-            <p>
-              Client and freelancer accounts use verified email sign-in. A
-              separate demo uses synthetic participants with a visible role
-              switcher. Modal runs private advocate inference; Amazon Bedrock
-              remains an available adapter after an initial daily-quota failure.
-              AWS DynamoDB and private S3 provide the deployment’s persistence.
-              Playwright performs browser checks. External agents connect
-              through A2A 1.0 with pact-scoped access. People approve agreements
-              and payment release.
-            </p>
-          </details>
-        </section>
+        <AwsArchitecture />
+        <JudgeStart />
         <section className="lp-final">
           <div className="lp-final-mark">
             <CheckCheck size={31} />
